@@ -5,11 +5,13 @@ import 'package:enabled_try_1/models/post_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:routemaster/routemaster.dart';
 
 class PostCard extends StatelessWidget {
-  PostCard({super.key, required this.post, required this.firstName});
+  PostCard({super.key, required this.post, required this.myUsername});
+  final String myUsername;
   final Post post;
-  final String firstName;
+
   final uid = FirebaseAuth.instance.currentUser!.uid;
   void likePost(WidgetRef ref) async {
     ref.read(postControllerProvider.notifier).likePost(post, uid);
@@ -17,23 +19,26 @@ class PostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        TopBar(post: post, firstName: firstName),
-        NetworkPicture(
-          img: post.link,
-          altText: post.altText,
-        ),
-        InfoBar(post: post),
-        CaptionBox(caption: post.caption)
-      ],
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TopBar(post: post, myUsername: myUsername),
+          NetworkPicture(
+            img: post.link,
+            altText: post.altText,
+          ),
+          InfoBar(post: post),
+          CaptionBox(caption: post.caption)
+        ],
+      ),
     );
   }
 }
 
 class InfoBar extends ConsumerWidget {
   InfoBar({super.key, required this.post});
+
   final Post post;
   final uid = FirebaseAuth.instance.currentUser!.uid;
   void likePost(WidgetRef ref) async {
@@ -102,9 +107,10 @@ class InfoBar extends ConsumerWidget {
 }
 
 class TopBar extends StatelessWidget {
-  TopBar({super.key, required this.post, required this.firstName});
+  TopBar({super.key, required this.post, required this.myUsername});
+  final String myUsername;
   final Post post;
-  final String firstName;
+
   final uid = FirebaseAuth.instance.currentUser!.uid;
   void disLikePost(bool isLike, WidgetRef ref) {
     ref.read(postControllerProvider.notifier).disLikePost(post, uid);
@@ -142,16 +148,23 @@ class TopBar extends StatelessWidget {
                     : null,
               ),
             ),
-            Semantics(
-              excludeSemantics: true,
-              // label: "Post author name : $firstName",
-              hint: "username is : ${post.username}",
-              child: Text(
-                post.username,
-                style: const TextStyle(
-                    fontFamily: "SecularOne",
-                    fontSize: 16,
-                    color: Colors.white),
+            GestureDetector(
+              onTap: () {
+                Routemaster.of(context)
+                    .push("/user_page/$myUsername/${post.username}/home");
+              },
+              child: Semantics(
+                excludeSemantics: true,
+                // label: "Post author name : $firstName",
+                label: "username is : ${post.username}",
+                hint: "Double tap to go to user profile",
+                child: Text(
+                  post.username,
+                  style: const TextStyle(
+                      fontFamily: "SecularOne",
+                      fontSize: 16,
+                      color: Colors.white),
+                ),
               ),
             ),
             Flexible(
